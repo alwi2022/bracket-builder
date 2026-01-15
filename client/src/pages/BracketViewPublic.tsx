@@ -8,8 +8,6 @@ export default function BracketViewPublic() {
   const [, params] = useRoute("/tournaments/view/:id");
   const id = Number(params?.id);
 
-  // guard biar gak fetch kalau id invalid
-  if (!id || Number.isNaN(id)) return <div>Invalid tournament id</div>;
 
   const { data: tournament, isLoading: loadingTourney } = useTournamentView(id);
   const { data: matches, isLoading: loadingMatches } = useTournamentMatchesView(id);
