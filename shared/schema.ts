@@ -40,6 +40,7 @@ export const matches = pgTable("matches", {
   score1: integer("score1").notNull().default(0),
   score2: integer("score2").notNull().default(0),
   winnerId: integer("winner_id").references(() => teams.id),
+  status: text("status").notNull().default("tbd"), // tbd, in_progress, completed
 });
 
 // Relations
@@ -84,7 +85,10 @@ export type CreateTournamentRequest = z.infer<typeof insertTournamentSchema>;
 // shared/schema.ts
 export const tournamentStatus = z.enum(["draft", "in_progress", "completed"]);
 
-export const insertMatchSchema = createInsertSchema(matches).omit({ id: true });
+export const insertMatchSchema = createInsertSchema(matches).omit({
+  id: true,
+  status: true,
+});
 
 // Types
 export type Player = typeof players.$inferSelect;
