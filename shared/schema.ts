@@ -69,15 +69,18 @@ export const insertPlayerSchema = createInsertSchema(players).omit({
   id: true,
   deleted: true,
 });
+export type CreatePlayerRequest = z.infer<typeof insertPlayerSchema>;
 export const insertTeamSchema = createInsertSchema(teams).omit({
   id: true,
   deleted: true,
 });
+export type CreateTeamRequest = z.infer<typeof insertTeamSchema>;
 export const insertTournamentSchema = createInsertSchema(tournaments)
   .omit({ id: true })
   .extend({
     status: z.enum(["draft", "in_progress", "completed"]).optional(),
   });
+export type CreateTournamentRequest = z.infer<typeof insertTournamentSchema>;
 // shared/schema.ts
 export const tournamentStatus = z.enum(["draft", "in_progress", "completed"]);
 

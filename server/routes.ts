@@ -28,6 +28,19 @@ export async function registerRoutes(
     }
   });
 
+  app.delete(api.players.softDelete.path, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id, 10);
+      const player = await storage.softDeletePlayer(playerId);
+      res.status(200).json(player);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
   // === Teams ===
   app.get(api.teams.list.path, async (req, res) => {
     const teams = await storage.getTeams();

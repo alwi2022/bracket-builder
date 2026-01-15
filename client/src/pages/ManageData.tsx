@@ -1,11 +1,12 @@
 // client/src/pages/ManageData.tsx
 import { useState } from "react";
-import { Plus, Users, UserPlus, Sparkles } from "lucide-react";
+import { Plus, Users, UserPlus, Sparkles, X } from "lucide-react";
 import {
   usePlayers,
   useTeams,
   useCreatePlayer,
   useCreateTeam,
+  useSoftDeletePlayer,
 } from "@/hooks/use-tournament";
 import { TeamCard } from "@/components/TeamCard";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +19,7 @@ export default function ManageData() {
 
   const createPlayer = useCreatePlayer();
   const createTeam = useCreateTeam();
+  const softDeletePlayer = useSoftDeletePlayer();
 
   const [playerName, setPlayerName] = useState("");
   const [teamForm, setTeamForm] = useState({ name: "", p1: "", p2: "" });
@@ -33,6 +35,20 @@ export default function ManageData() {
       toast({
         title: "Error",
         description: "Failed to create player",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSoftDeletePlayer = async (playerId: number) => {
+    try {
+      await softDeletePlayer.mutateAsync(playerId);
+      toast({ title: "Deleted", description: "Player removed" });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Delete failed",
         variant: "destructive",
       });
     }
@@ -163,9 +179,14 @@ export default function ManageData() {
                   <div
                     key={player.id}
                     className="bg-secondary/30 p-3 rounded-lg border border-border/50 flex items-center gap-2"
+                    title={player.name}
                   >
                     <div className="w-2 h-2 rounded-full bg-accent" />
                     <span className="font-medium truncate">{player.name}</span>
+                    <X
+                      onClick={() => handleSoftDeletePlayer(player.id)}
+                      className="w-4 h-4 text-muted-foreground cursor-pointer"
+                    />
                   </div>
                 ))}
               </div>

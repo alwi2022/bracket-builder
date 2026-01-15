@@ -2,13 +2,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { z } from "zod";
-import type { 
-  CreatePlayerRequest, 
-  CreateTeamRequest, 
+import type {
+  CreatePlayerRequest,
+  CreateTeamRequest,
   CreateTournamentRequest,
   UpdateMatchRequest,
   TeamWithPlayers,
-  MatchWithTeams
+  MatchWithTeams,
 } from "@shared/schema";
 
 // === PLAYERS ===
@@ -16,7 +16,9 @@ export function usePlayers() {
   return useQuery({
     queryKey: [api.players.list.path],
     queryFn: async () => {
-      const res = await fetch(api.players.list.path, { credentials: "include" });
+      const res = await fetch(api.players.list.path, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch players");
       return api.players.list.responses[200].parse(await res.json());
     },
@@ -24,7 +26,6 @@ export function usePlayers() {
 }
 
 const DUAMENIT = 2 * 60 * 1000;
-
 
 export function useTournamentView(id: number) {
   return useQuery({
@@ -38,8 +39,8 @@ export function useTournamentView(id: number) {
     },
     enabled: !!id,
     refetchInterval: DUAMENIT,
-    refetchIntervalInBackground: true, 
-    refetchOnWindowFocus: true,       
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -47,10 +48,14 @@ export function useTournamentMatchesView(tournamentId: number) {
   return useQuery({
     queryKey: [api.tournaments.getMatches.path, tournamentId],
     queryFn: async () => {
-      const url = buildUrl(api.tournaments.getMatches.path, { id: tournamentId });
+      const url = buildUrl(api.tournaments.getMatches.path, {
+        id: tournamentId,
+      });
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch matches");
-      return api.tournaments.getMatches.responses[200].parse(await res.json()) as MatchWithTeams[];
+      return api.tournaments.getMatches.responses[200].parse(
+        await res.json()
+      ) as MatchWithTeams[];
     },
     enabled: !!tournamentId,
 
@@ -59,8 +64,6 @@ export function useTournamentMatchesView(tournamentId: number) {
     refetchOnWindowFocus: true,
   });
 }
-
-
 
 export function useCreatePlayer() {
   const queryClient = useQueryClient();
@@ -85,6 +88,24 @@ export function useCreatePlayer() {
   });
 }
 
+export function useSoftDeletePlayer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(buildUrl(api.players.softDelete.path, { id }), {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to soft delete player");
+      return api.players.softDelete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.players.list.path] });
+    },
+  });
+}
+
 // === TEAMS ===
 export function useTeams() {
   return useQuery({
@@ -92,7 +113,9 @@ export function useTeams() {
     queryFn: async () => {
       const res = await fetch(api.teams.list.path, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch teams");
-      return api.teams.list.responses[200].parse(await res.json()) as TeamWithPlayers[];
+      return api.teams.list.responses[200].parse(
+        await res.json()
+      ) as TeamWithPlayers[];
     },
   });
 }
@@ -107,7 +130,7 @@ export function useCreateTeam() {
         player1Id: Number(data.player1Id),
         player2Id: Number(data.player2Id),
       };
-      
+
       const validated = api.teams.create.input.parse(payload);
       const res = await fetch(api.teams.create.path, {
         method: "POST",
@@ -129,7 +152,9 @@ export function useTournaments() {
   return useQuery({
     queryKey: [api.tournaments.list.path],
     queryFn: async () => {
-      const res = await fetch(api.tournaments.list.path, { credentials: "include" });
+      const res = await fetch(api.tournaments.list.path, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Failed to fetch tournaments");
       return api.tournaments.list.responses[200].parse(await res.json());
     },
@@ -156,7 +181,7 @@ export function useCreateTournament() {
     mutationFn: async (data: CreateTournamentRequest) => {
       const payload = { ...data, teamCount: Number(data.teamCount) };
       const validated = api.tournaments.create.input.parse(payload);
-      
+
       const res = await fetch(api.tournaments.create.path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -177,10 +202,14 @@ export function useTournamentMatches(tournamentId: number) {
   return useQuery({
     queryKey: [api.tournaments.getMatches.path, tournamentId],
     queryFn: async () => {
-      const url = buildUrl(api.tournaments.getMatches.path, { id: tournamentId });
+      const url = buildUrl(api.tournaments.getMatches.path, {
+        id: tournamentId,
+      });
       const res = await fetch(url, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch matches");
-      return api.tournaments.getMatches.responses[200].parse(await res.json()) as MatchWithTeams[];
+      return api.tournaments.getMatches.responses[200].parse(
+        await res.json()
+      ) as MatchWithTeams[];
     },
     enabled: !!tournamentId,
   });
@@ -189,29 +218,39 @@ export function useTournamentMatches(tournamentId: number) {
 export function useUpdateMatch() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: number; updates: UpdateMatchRequest }) => {
+    mutationFn: async ({
+      id,
+      updates,
+    }: {
+      id: number;
+      updates: UpdateMatchRequest;
+    }) => {
       const url = buildUrl(api.matches.update.path, { id });
-      
+
       // Coerce scores to numbers if needed
       const payload: any = { ...updates };
       if (payload.score1 !== undefined) payload.score1 = Number(payload.score1);
       if (payload.score2 !== undefined) payload.score2 = Number(payload.score2);
-      if (payload.team1Id !== undefined) payload.team1Id = Number(payload.team1Id);
-      if (payload.team2Id !== undefined) payload.team2Id = Number(payload.team2Id);
-      
+      if (payload.team1Id !== undefined)
+        payload.team1Id = Number(payload.team1Id);
+      if (payload.team2Id !== undefined)
+        payload.team2Id = Number(payload.team2Id);
+
       const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         credentials: "include",
       });
-      
+
       if (!res.ok) throw new Error("Failed to update match");
       return api.matches.update.responses[200].parse(await res.json());
     },
     onSuccess: (_, { id }) => {
       // We invalidate matches for the tournament (need tournament ID, but we usually refetch all matches)
-      queryClient.invalidateQueries({ queryKey: [api.tournaments.getMatches.path] });
+      queryClient.invalidateQueries({
+        queryKey: [api.tournaments.getMatches.path],
+      });
     },
   });
 }

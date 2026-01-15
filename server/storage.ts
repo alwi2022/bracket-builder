@@ -22,6 +22,7 @@ export interface IStorage {
   // Players
   getPlayers(): Promise<Player[]>;
   createPlayer(player: InsertPlayer): Promise<Player>;
+  softDeletePlayer(id: number): Promise<Player>;
 
   // Teams
   getTeams(): Promise<Team[]>;
@@ -44,7 +45,6 @@ export interface IStorage {
   getMatch(id: number): Promise<Match | undefined>;
   updateMatch(id: number, updates: Partial<InsertMatch>): Promise<Match>;
   isPlayerUsedInAnyTeam(playerId: number): Promise<boolean>;
-
 }
 
 export class DatabaseStorage implements IStorage {
@@ -57,6 +57,15 @@ export class DatabaseStorage implements IStorage {
     return newPlayer;
   }
 
+  async softDeletePlayer(id: number): Promise<Player> {
+    const [deletedPlayer] = await db
+      .update(players)
+      .set({ deleted: true })
+      .where(eq(players.id, id))
+      .returning();
+    return deletedPlayer;
+  }
+
   async getTeams(): Promise<Team[]> {
     return await db.query.teams.findMany({
       with: {
@@ -66,25 +75,27 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async updateTournamentStatus(id: number, status: "draft" | "in_progress" | "completed"): Promise<Tournament> {
-  const [updated] = await db
-    .update(tournaments)
-    .set({ status })
-    .where(eq(tournaments.id, id))
-    .returning();
-  return updated;
-}
+  async updateTournamentStatus(
+    id: number,
+    status: "draft" | "in_progress" | "completed"
+  ): Promise<Tournament> {
+    const [updated] = await db
+      .update(tournaments)
+      .set({ status })
+      .where(eq(tournaments.id, id))
+      .returning();
+    return updated;
+  }
 
-async isPlayerUsedInAnyTeam(playerId: number): Promise<boolean> {
-  const rows = await db
-    .select({ id: teams.id })
-    .from(teams)
-    .where(or(eq(teams.player1Id, playerId), eq(teams.player2Id, playerId)))
-    .limit(1);
+  async isPlayerUsedInAnyTeam(playerId: number): Promise<boolean> {
+    const rows = await db
+      .select({ id: teams.id })
+      .from(teams)
+      .where(or(eq(teams.player1Id, playerId), eq(teams.player2Id, playerId)))
+      .limit(1);
 
-  return rows.length > 0;
-}
-
+    return rows.length > 0;
+  }
 
   async createTeam(team: InsertTeam): Promise<Team> {
     const [newTeam] = await db.insert(teams).values(team).returning();
@@ -133,7 +144,7 @@ async isPlayerUsedInAnyTeam(playerId: number): Promise<boolean> {
         winner: true,
       },
     });
-    return result.map(match => ({
+    return result.map((match) => ({
       ...match,
       team1: match.team1 ?? undefined,
       team2: match.team2 ?? undefined,
