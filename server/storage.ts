@@ -49,7 +49,9 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getPlayers(): Promise<Player[]> {
-    return await db.select().from(players);
+    return await db.query.players.findMany({
+      where: eq(players.deleted, false),
+    });
   }
 
   async createPlayer(player: InsertPlayer): Promise<Player> {
@@ -72,6 +74,7 @@ export class DatabaseStorage implements IStorage {
         player1: true,
         player2: true,
       },
+      where: eq(teams.deleted, false),
     });
   }
 
