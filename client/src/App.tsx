@@ -3,16 +3,25 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Navbar } from "@/components/Navbar";
 import NotFound from "@/pages/not-found";
+import ManageData from "@/pages/ManageData";
+import TournamentList from "@/pages/TournamentList";
+import BracketView from "@/pages/BracketView";
 
 function Router() {
   return (
-    <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
-      <Route component={NotFound} />
-    </Switch>
+    <div className="min-h-screen bg-background font-sans">
+      <Navbar />
+      <main>
+        <Switch>
+          <Route path="/" component={ManageData} />
+          <Route path="/tournaments" component={TournamentList} />
+          <Route path="/tournaments/:id" component={BracketView} />
+          <Route component={NotFound} />
+        </Switch>
+      </main>
+    </div>
   );
 }
 
