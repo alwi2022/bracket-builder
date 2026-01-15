@@ -23,6 +23,45 @@ export function usePlayers() {
   });
 }
 
+const DUAMENIT = 2 * 60 * 1000;
+
+
+export function useTournamentView(id: number) {
+  return useQuery({
+    queryKey: [api.tournaments.get.path, id],
+    queryFn: async () => {
+      const url = buildUrl(api.tournaments.get.path, { id });
+      const res = await fetch(url, { credentials: "include" });
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error("Failed to fetch tournament");
+      return api.tournaments.get.responses[200].parse(await res.json());
+    },
+    enabled: !!id,
+    refetchInterval: DUAMENIT,
+    refetchIntervalInBackground: true, 
+    refetchOnWindowFocus: true,       
+  });
+}
+
+export function useTournamentMatchesView(tournamentId: number) {
+  return useQuery({
+    queryKey: [api.tournaments.getMatches.path, tournamentId],
+    queryFn: async () => {
+      const url = buildUrl(api.tournaments.getMatches.path, { id: tournamentId });
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch matches");
+      return api.tournaments.getMatches.responses[200].parse(await res.json()) as MatchWithTeams[];
+    },
+    enabled: !!tournamentId,
+
+    refetchInterval: DUAMENIT,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+  });
+}
+
+
+
 export function useCreatePlayer() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -4,6 +4,7 @@ import { Plus, Users, UserPlus, Sparkles } from "lucide-react";
 import { usePlayers, useTeams, useCreatePlayer, useCreateTeam } from "@/hooks/use-tournament";
 import { TeamCard } from "@/components/TeamCard";
 import { useToast } from "@/hooks/use-toast";
+import { Navbar } from "@/components/Navbar";
 
 export default function ManageData() {
   const { data: players, isLoading: loadingPlayers } = usePlayers();
@@ -68,7 +69,9 @@ const usedCount = usedPlayerIds.size;
 const availableCount = availablePlayers.length;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+    <div>
+      <Navbar/>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
       <div className="text-center space-y-4">
         <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-foreground">
           Tournament Setup
@@ -213,6 +216,7 @@ const availableCount = availablePlayers.length;
           </div>
         </section>
       </div>
+    </div>
     </div>
   );
 }
