@@ -183,7 +183,14 @@ export class DatabaseStorage implements IStorage {
   async updateMatch(id: number, updates: Partial<InsertMatch>): Promise<Match> {
     const [updated] = await db
       .update(matches)
-      .set(updates)
+      .set(
+        updates.team1Id || updates.team2Id
+          ? {
+              ...updates,
+              status: "in_progress",
+            }
+          : updates
+      )
       .where(eq(matches.id, id))
       .returning();
     return updated;
