@@ -1,3 +1,4 @@
+// client/src/pages/ManageData.tsx
 import { useState } from "react";
 import { Plus, Users, UserPlus, Sparkles } from "lucide-react";
 import { usePlayers, useTeams, useCreatePlayer, useCreateTeam } from "@/hooks/use-tournament";
@@ -50,6 +51,22 @@ export default function ManageData() {
     }
   };
 
+  const usedPlayerIds = new Set<number>();
+teams?.forEach((t) => {
+  if (t.player1Id) usedPlayerIds.add(t.player1Id);
+  if (t.player2Id) usedPlayerIds.add(t.player2Id);
+});
+
+
+
+const availablePlayers = (players ?? []).filter((p) => !usedPlayerIds.has(p.id));
+
+const availableForP1 = availablePlayers;
+const availableForP2 = availablePlayers.filter(p => String(p.id) !== teamForm.p1);
+const totalPlayers = players?.length ?? 0;
+const usedCount = usedPlayerIds.size;
+const availableCount = availablePlayers.length;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
       <div className="text-center space-y-4">
@@ -86,25 +103,43 @@ export default function ManageData() {
             </button>
           </form>
 
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Roster</h3>
-            {loadingPlayers ? (
-              <div className="text-center py-8 text-muted-foreground animate-pulse">Loading players...</div>
-            ) : players?.length === 0 ? (
-              <div className="text-center py-8 border-2 border-dashed border-border rounded-xl text-muted-foreground">
-                No players added yet
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {players?.map((player) => (
-                  <div key={player.id} className="bg-secondary/30 p-3 rounded-lg border border-border/50 flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-accent" />
-                    <span className="font-medium truncate">{player.name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+<div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+  <div className="flex items-center justify-between">
+    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+      Roster
+    </h3>
+    <span className="text-xs text-muted-foreground">
+      Available {availableCount} / Total {totalPlayers} (Used {usedCount})
+    </span>
+  </div>
+
+  {loadingPlayers || loadingTeams ? (
+    <div className="text-center py-8 text-muted-foreground animate-pulse">
+      Loading players...
+    </div>
+  ) : totalPlayers === 0 ? (
+    <div className="text-center py-8 border-2 border-dashed border-border rounded-xl text-muted-foreground">
+      No players added yet
+    </div>
+  ) : availableCount === 0 ? (
+    <div className="text-center py-8 border-2 border-dashed border-border rounded-xl text-muted-foreground">
+      All players are already assigned to teams
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {availablePlayers.map((player) => (
+        <div
+          key={player.id}
+          className="bg-secondary/30 p-3 rounded-lg border border-border/50 flex items-center gap-2"
+        >
+          <div className="w-2 h-2 rounded-full bg-accent" />
+          <span className="font-medium truncate">{player.name}</span>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
+
         </section>
 
         {/* TEAM MANAGEMENT */}
@@ -136,7 +171,7 @@ export default function ManageData() {
                   className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
                 >
                   <option value="">Select...</option>
-                  {players?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {availableForP1?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div>
@@ -147,7 +182,7 @@ export default function ManageData() {
                   className="w-full px-4 py-2 rounded-lg bg-background border border-border focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
                 >
                   <option value="">Select...</option>
-                  {players?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {availableForP2?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
             </div>

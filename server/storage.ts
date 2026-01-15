@@ -1,11 +1,22 @@
 // server/storage.ts
 import { db } from "./db";
 import {
-  players, teams, tournaments, matches,
-  type InsertPlayer, type InsertTeam, type InsertTournament, type InsertMatch, type UpdateMatchRequest,
-  type Player, type Team, type Tournament, type Match, type MatchWithTeams
+  players,
+  teams,
+  tournaments,
+  matches,
+  type InsertPlayer,
+  type InsertTeam,
+  type InsertTournament,
+  type InsertMatch,
+  type UpdateMatchRequest,
+  type Player,
+  type Team,
+  type Tournament,
+  type Match,
+  type MatchWithTeams,
 } from "@shared/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, or } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -21,12 +32,19 @@ export interface IStorage {
   getTournaments(): Promise<Tournament[]>;
   getTournament(id: number): Promise<Tournament | undefined>;
   createTournament(tournament: InsertTournament): Promise<Tournament>;
+  // server/storage.ts
+  updateTournamentStatus(
+    id: number,
+    status: "draft" | "in_progress" | "completed"
+  ): Promise<Tournament>;
 
   // Matches
   getMatchesByTournament(tournamentId: number): Promise<MatchWithTeams[]>;
   createMatch(match: InsertMatch): Promise<Match>;
   getMatch(id: number): Promise<Match | undefined>;
   updateMatch(id: number, updates: Partial<InsertMatch>): Promise<Match>;
+  isPlayerUsedInAnyTeam(playerId: number): Promise<boolean>;
+
 }
 
 export class DatabaseStorage implements IStorage {
@@ -43,10 +61,30 @@ export class DatabaseStorage implements IStorage {
     return await db.query.teams.findMany({
       with: {
         player1: true,
-        player2: true
-      }
+        player2: true,
+      },
     });
   }
+
+  async updateTournamentStatus(id: number, status: "draft" | "in_progress" | "completed"): Promise<Tournament> {
+  const [updated] = await db
+    .update(tournaments)
+    .set({ status })
+    .where(eq(tournaments.id, id))
+    .returning();
+  return updated;
+}
+
+async isPlayerUsedInAnyTeam(playerId: number): Promise<boolean> {
+  const rows = await db
+    .select({ id: teams.id })
+    .from(teams)
+    .where(or(eq(teams.player1Id, playerId), eq(teams.player2Id, playerId)))
+    .limit(1);
+
+  return rows.length > 0;
+}
+
 
   async createTeam(team: InsertTeam): Promise<Team> {
     const [newTeam] = await db.insert(teams).values(team).returning();
@@ -58,8 +96,8 @@ export class DatabaseStorage implements IStorage {
       where: eq(teams.id, id),
       with: {
         player1: true,
-        player2: true
-      }
+        player2: true,
+      },
     });
   }
 
@@ -68,24 +106,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTournament(id: number): Promise<Tournament | undefined> {
-    const [tournament] = await db.select().from(tournaments).where(eq(tournaments.id, id));
+    const [tournament] = await db
+      .select()
+      .from(tournaments)
+      .where(eq(tournaments.id, id));
     return tournament;
   }
 
   async createTournament(tournament: InsertTournament): Promise<Tournament> {
-    const [newTournament] = await db.insert(tournaments).values(tournament).returning();
+    const [newTournament] = await db
+      .insert(tournaments)
+      .values(tournament)
+      .returning();
     return newTournament;
   }
 
-  async getMatchesByTournament(tournamentId: number): Promise<MatchWithTeams[]> {
+  async getMatchesByTournament(
+    tournamentId: number
+  ): Promise<MatchWithTeams[]> {
     return await db.query.matches.findMany({
       where: eq(matches.tournamentId, tournamentId),
       orderBy: asc(matches.matchOrder),
       with: {
         team1: true,
         team2: true,
-        winner: true
-      }
+        winner: true,
+      },
     });
   }
 
@@ -100,7 +146,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMatch(id: number, updates: Partial<InsertMatch>): Promise<Match> {
-    const [updated] = await db.update(matches)
+    const [updated] = await db
+      .update(matches)
       .set(updates)
       .where(eq(matches.id, id))
       .returning();

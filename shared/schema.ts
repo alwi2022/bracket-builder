@@ -55,6 +55,9 @@ export const insertTournamentSchema = createInsertSchema(tournaments)
   .extend({
     status: z.enum(["draft", "in_progress", "completed"]).optional(),
   });
+  // shared/schema.ts
+export const tournamentStatus = z.enum(["draft", "in_progress", "completed"]);
+
 
 export const insertMatchSchema = createInsertSchema(matches).omit({ id: true });
 
