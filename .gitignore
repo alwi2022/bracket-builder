@@ -1,6 +1,22 @@
-node_modules
-dist
+# deps
+node_modules/
+**/node_modules/
+
+# env
+.env
+.env.*
+!.env.example
+
+# build
+dist/
+build/
+.next/
+out/
+
+# logs
+*.log
+
+# OS/Editor
 .DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
+.vscode/
+.idea/
