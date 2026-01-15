@@ -76,6 +76,19 @@ export async function registerRoutes(
     }
   });
 
+  app.delete(api.teams.softDelete.path, async (req, res) => {
+    try {
+      const teamId = parseInt(req.params.id, 10);
+      const team = await storage.softDeleteTeam(teamId);
+      res.status(200).json(team);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
   // === Tournaments ===
   app.get(api.tournaments.list.path, async (req, res) => {
     const tournaments = await storage.getTournaments();

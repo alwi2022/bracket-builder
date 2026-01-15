@@ -7,6 +7,7 @@ import {
   useCreatePlayer,
   useCreateTeam,
   useSoftDeletePlayer,
+  useSoftDeleteTeam,
 } from "@/hooks/use-tournament";
 import { TeamCard } from "@/components/TeamCard";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ export default function ManageData() {
   const createPlayer = useCreatePlayer();
   const createTeam = useCreateTeam();
   const softDeletePlayer = useSoftDeletePlayer();
+  const softDeleteTeam = useSoftDeleteTeam();
 
   const [playerName, setPlayerName] = useState("");
   const [teamForm, setTeamForm] = useState({ name: "", p1: "", p2: "" });
@@ -44,6 +46,20 @@ export default function ManageData() {
     try {
       await softDeletePlayer.mutateAsync(playerId);
       toast({ title: "Deleted", description: "Player removed" });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Delete failed",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSoftDeleteTeam = async (teamId: number) => {
+    try {
+      await softDeleteTeam.mutateAsync(teamId);
+      toast({ title: "Deleted", description: "Team removed" });
     } catch (error) {
       console.error(error);
       toast({
@@ -296,7 +312,11 @@ export default function ManageData() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                 {teams?.map((team) => (
-                  <TeamCard key={team.id} team={team} />
+                  <TeamCard
+                    onDelete={() => handleSoftDeleteTeam(team.id)}
+                    key={team.id}
+                    team={team}
+                  />
                 ))}
               </div>
             )}

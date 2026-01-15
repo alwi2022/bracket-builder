@@ -68,6 +68,14 @@ export const api = {
         400: errorSchemas.validation,
       },
     },
+    softDelete: {
+      method: "DELETE" as const,
+      path: "/api/teams/:id",
+      responses: {
+        200: z.custom<typeof teams.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
   },
   tournaments: {
     list: {

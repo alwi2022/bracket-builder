@@ -147,6 +147,24 @@ export function useCreateTeam() {
   });
 }
 
+export function useSoftDeleteTeam() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(buildUrl(api.teams.softDelete.path, { id }), {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to soft delete team");
+      return api.teams.softDelete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.teams.list.path] });
+    },
+  });
+}
+
 // === TOURNAMENTS ===
 export function useTournaments() {
   return useQuery({

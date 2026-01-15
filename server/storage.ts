@@ -16,7 +16,7 @@ import {
   type Match,
   type MatchWithTeams,
 } from "@shared/schema";
-import { eq, asc, or } from "drizzle-orm";
+import { eq, asc, or, and } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -28,6 +28,7 @@ export interface IStorage {
   getTeams(): Promise<Team[]>;
   createTeam(team: InsertTeam): Promise<Team>;
   getTeam(id: number): Promise<Team | undefined>;
+  softDeleteTeam(id: number): Promise<Team>;
 
   // Tournaments
   getTournaments(): Promise<Tournament[]>;
@@ -78,6 +79,15 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
+  async softDeleteTeam(id: number): Promise<Team> {
+    const [deletedTeam] = await db
+      .update(teams)
+      .set({ deleted: true })
+      .where(eq(teams.id, id))
+      .returning();
+    return deletedTeam;
+  }
+
   async updateTournamentStatus(
     id: number,
     status: "draft" | "in_progress" | "completed"
@@ -94,7 +104,12 @@ export class DatabaseStorage implements IStorage {
     const rows = await db
       .select({ id: teams.id })
       .from(teams)
-      .where(or(eq(teams.player1Id, playerId), eq(teams.player2Id, playerId)))
+      .where(
+        and(
+          eq(teams.deleted, false),
+          or(eq(teams.player1Id, playerId), eq(teams.player2Id, playerId))
+        )
+      )
       .limit(1);
 
     return rows.length > 0;
