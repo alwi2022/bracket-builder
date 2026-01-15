@@ -1,3 +1,4 @@
+// server/routes.ts
 import type { Express } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
@@ -106,53 +107,70 @@ export async function registerRoutes(
   });
 
   // === Matches ===
-  app.patch(api.matches.update.path, async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const input = api.matches.update.input.parse(req.body);
-      
-      // Get current match state
-      const currentMatch = await storage.getMatch(id);
-      if (!currentMatch) return res.status(404).json({ message: "Match not found" });
-      
-      // Update the match
-      const updatedMatch = await storage.updateMatch(id, input);
+app.patch(api.matches.update.path, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const input = api.matches.update.input.parse(req.body);
 
-      // If we need to advance the winner
-      // Logic: If there is a winner, find the next match in the tree and place them
-      if (updatedMatch.winnerId) {
-        const matches = await storage.getMatchesByTournament(updatedMatch.tournamentId);
-        
-        // Find next match
-        // Current match is at 'round' and 'matchOrder'
-        // Next match is at 'round + 1', and order is floor(matchOrder / 2)
-        // Position in next match is: matchOrder % 2 === 0 ? team1 : team2
-        
-        const nextRound = updatedMatch.round + 1;
-        const nextOrder = Math.floor(updatedMatch.matchOrder / 2);
-        
-        const nextMatch = matches.find(m => m.round === nextRound && m.matchOrder === nextOrder);
-        
-        if (nextMatch) {
-          const isTeam1Slot = updatedMatch.matchOrder % 2 === 0;
-          const updates: any = {};
-          if (isTeam1Slot) {
-            updates.team1Id = updatedMatch.winnerId;
-          } else {
-            updates.team2Id = updatedMatch.winnerId;
-          }
-          await storage.updateMatch(nextMatch.id, updates);
-        }
-      }
+    const currentMatch = await storage.getMatch(id);
+    if (!currentMatch) return res.status(404).json({ message: "Match not found" });
 
-      res.json(updatedMatch);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(400).json({ message: err.errors[0].message });
+    // Pisahkan flag advanceWinner dari updates yang masuk DB
+    const { advanceWinner, ...updates } = input as any;
+
+    // Kalau frontend kirim score sebagai string, pastikan number (defensive)
+    if (updates.score1 !== undefined) updates.score1 = Number(updates.score1);
+    if (updates.score2 !== undefined) updates.score2 = Number(updates.score2);
+
+    // Kalau advanceWinner = true dan dua tim sudah ada, tentukan pemenang
+    if (advanceWinner) {
+      const team1Id = updates.team1Id ?? currentMatch.team1Id;
+      const team2Id = updates.team2Id ?? currentMatch.team2Id;
+
+      const score1 = updates.score1 ?? currentMatch.score1 ?? 0;
+      const score2 = updates.score2 ?? currentMatch.score2 ?? 0;
+
+      // Wajib ada dua team untuk menentukan winner
+      if (team1Id && team2Id) {
+        if (score1 > score2) updates.winnerId = team1Id;
+        else if (score2 > score1) updates.winnerId = team2Id;
+        else updates.winnerId = null; // seri -> belum ada pemenang (atau bikin rule tie-break)
       }
-      throw err;
     }
-  });
+
+    // Update match (winnerId ikut ke-save kalau ada)
+    const updatedMatch = await storage.updateMatch(id, updates);
+
+    // Advance winner ke match berikutnya kalau winnerId sudah ada
+    if (updatedMatch.winnerId) {
+      const allMatches = await storage.getMatchesByTournament(updatedMatch.tournamentId);
+
+      const nextRound = updatedMatch.round + 1;
+      const nextOrder = Math.floor(updatedMatch.matchOrder / 2);
+
+      const nextMatch = allMatches.find(
+        (m) => m.round === nextRound && m.matchOrder === nextOrder
+      );
+
+      if (nextMatch) {
+        const isTeam1Slot = updatedMatch.matchOrder % 2 === 0;
+        const advanceUpdates: any = isTeam1Slot
+          ? { team1Id: updatedMatch.winnerId }
+          : { team2Id: updatedMatch.winnerId };
+
+        await storage.updateMatch(nextMatch.id, advanceUpdates);
+      }
+    }
+
+    res.json(updatedMatch);
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return res.status(400).json({ message: err.errors[0].message });
+    }
+    throw err;
+  }
+});
+
 
   // Seed data
   await seed();
