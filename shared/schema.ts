@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -6,13 +6,19 @@ import { relations } from "drizzle-orm";
 export const players = pgTable("players", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  deleted: boolean("deleted").notNull().default(false),
 });
 
 export const teams = pgTable("teams", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  player1Id: integer("player1_id").notNull().references(() => players.id),
-  player2Id: integer("player2_id").notNull().references(() => players.id),
+  player1Id: integer("player1_id")
+    .notNull()
+    .references(() => players.id),
+  player2Id: integer("player2_id")
+    .notNull()
+    .references(() => players.id),
+  deleted: boolean("deleted").notNull().default(false),
 });
 
 export const tournaments = pgTable("tournaments", {
@@ -24,7 +30,9 @@ export const tournaments = pgTable("tournaments", {
 
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
-  tournamentId: integer("tournament_id").notNull().references(() => tournaments.id),
+  tournamentId: integer("tournament_id")
+    .notNull()
+    .references(() => tournaments.id),
   round: integer("round").notNull(),
   matchOrder: integer("match_order").notNull(),
   team1Id: integer("team1_id").references(() => teams.id),
@@ -36,28 +44,42 @@ export const matches = pgTable("matches", {
 
 // Relations
 export const teamsRelations = relations(teams, ({ one }) => ({
-  player1: one(players, { fields: [teams.player1Id], references: [players.id] }),
-  player2: one(players, { fields: [teams.player2Id], references: [players.id] }),
+  player1: one(players, {
+    fields: [teams.player1Id],
+    references: [players.id],
+  }),
+  player2: one(players, {
+    fields: [teams.player2Id],
+    references: [players.id],
+  }),
 }));
 
 export const matchesRelations = relations(matches, ({ one }) => ({
-  tournament: one(tournaments, { fields: [matches.tournamentId], references: [tournaments.id] }),
+  tournament: one(tournaments, {
+    fields: [matches.tournamentId],
+    references: [tournaments.id],
+  }),
   team1: one(teams, { fields: [matches.team1Id], references: [teams.id] }),
   team2: one(teams, { fields: [matches.team2Id], references: [teams.id] }),
   winner: one(teams, { fields: [matches.winnerId], references: [teams.id] }),
 }));
 
 // Zod Schemas
-export const insertPlayerSchema = createInsertSchema(players).omit({ id: true });
-export const insertTeamSchema = createInsertSchema(teams).omit({ id: true });
+export const insertPlayerSchema = createInsertSchema(players).omit({
+  id: true,
+  deleted: true,
+});
+export const insertTeamSchema = createInsertSchema(teams).omit({
+  id: true,
+  deleted: true,
+});
 export const insertTournamentSchema = createInsertSchema(tournaments)
   .omit({ id: true })
   .extend({
     status: z.enum(["draft", "in_progress", "completed"]).optional(),
   });
-  // shared/schema.ts
+// shared/schema.ts
 export const tournamentStatus = z.enum(["draft", "in_progress", "completed"]);
-
 
 export const insertMatchSchema = createInsertSchema(matches).omit({ id: true });
 
@@ -75,6 +97,12 @@ export type Match = typeof matches.$inferSelect;
 export type InsertMatch = z.infer<typeof insertMatchSchema>;
 
 export type TeamWithPlayers = Team & { player1?: Player; player2?: Player };
-export type MatchWithTeams = Match & { team1?: Team; team2?: Team; winner?: Team };
+export type MatchWithTeams = Match & {
+  team1?: Team;
+  team2?: Team;
+  winner?: Team;
+};
 
-export type UpdateMatchRequest = Partial<InsertMatch> & { advanceWinner?: boolean };
+export type UpdateMatchRequest = Partial<InsertMatch> & {
+  advanceWinner?: boolean;
+};

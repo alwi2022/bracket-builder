@@ -124,7 +124,7 @@ async isPlayerUsedInAnyTeam(playerId: number): Promise<boolean> {
   async getMatchesByTournament(
     tournamentId: number
   ): Promise<MatchWithTeams[]> {
-    return await db.query.matches.findMany({
+    const result = await db.query.matches.findMany({
       where: eq(matches.tournamentId, tournamentId),
       orderBy: asc(matches.matchOrder),
       with: {
@@ -133,6 +133,12 @@ async isPlayerUsedInAnyTeam(playerId: number): Promise<boolean> {
         winner: true,
       },
     });
+    return result.map(match => ({
+      ...match,
+      team1: match.team1 ?? undefined,
+      team2: match.team2 ?? undefined,
+      winner: match.winner ?? undefined,
+    }));
   }
 
   async createMatch(match: InsertMatch): Promise<Match> {
