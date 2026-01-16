@@ -154,13 +154,13 @@ function MatchNode({
     });
   };
 
-  const handleSaveScore = () => {
+  const handleSaveScore = (advance: boolean = false) => {
     updateMatch.mutate({
       id: match.id,
       updates: {
         score1: parseInt(score1),
         score2: parseInt(score2),
-        advanceWinner: true, // Custom flag for backend logic
+        advanceWinner: advance, // Custom flag for backend logic
       },
     });
   };
@@ -218,9 +218,22 @@ function MatchNode({
 
       {/* Action Footer */}
       {match.team1 && match.team2 && !isCompleted && (
-        <div className="bg-muted/30 p-2 flex justify-end">
+        <div className="bg-muted/30 p-2 flex justify-end gap-x-2">
           <button
-            onClick={handleSaveScore}
+            onClick={() => handleSaveScore(false)}
+            disabled={updateMatch.isPending}
+            className="text-xs font-bold flex items-center gap-1 text-green-500 hover:text-green-500/80 transition-colors bg-green-500/10 px-3 py-1.5 rounded-md"
+          >
+            {updateMatch.isPending ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Save className="w-3 h-3" />
+            )}
+            Save
+          </button>
+
+          <button
+            onClick={() => handleSaveScore(true)}
             disabled={updateMatch.isPending}
             className="text-xs font-bold flex items-center gap-1 text-primary hover:text-primary/80 transition-colors bg-primary/10 px-3 py-1.5 rounded-md"
           >
