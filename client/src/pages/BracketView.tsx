@@ -6,7 +6,7 @@ import {
   useUpdateMatch,
   useTeams,
 } from "@/hooks/use-tournament";
-import { Loader2, Trophy, Plus, Save } from "lucide-react";
+import { Loader2, Trophy, Plus, Save, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -165,6 +165,15 @@ function MatchNode({
     });
   };
 
+  const handleRemoveTeam = (id: number) => {
+    updateMatch.mutate({
+      id: match.id,
+      updates: {
+        [id === match.team1Id ? "team1Id" : "team2Id"]: null,
+      },
+    });
+  };
+
   const isCompleted = !!match.winnerId;
 
   return (
@@ -189,6 +198,7 @@ function MatchNode({
           onSelect={(tid) => handleTeamSelect(tid, "team1")}
           availableTeams={availableForSelection}
           readOnly={isCompleted}
+          onDelete={handleRemoveTeam}
         />
 
         {/* Team 2 Slot */}
@@ -202,6 +212,7 @@ function MatchNode({
           onSelect={(tid) => handleTeamSelect(tid, "team2")}
           availableTeams={availableForSelection}
           readOnly={isCompleted}
+          onDelete={handleRemoveTeam}
         />
       </div>
 
@@ -236,6 +247,7 @@ function TeamSlot({
   onSelect,
   availableTeams,
   readOnly,
+  onDelete,
 }: {
   team?: any;
   score: string;
@@ -246,6 +258,7 @@ function TeamSlot({
   onSelect: (id: number) => void;
   availableTeams: TeamWithPlayers[];
   readOnly: boolean;
+  onDelete?: (id: number) => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -272,6 +285,14 @@ function TeamSlot({
           >
             {team.name}
           </span>
+          <X
+            onClick={() => {
+              if (onDelete) {
+                onDelete(team.id);
+              }
+            }}
+            className="w-3 h-3 text-muted-foreground"
+          />
         </div>
       ) : canSelect ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

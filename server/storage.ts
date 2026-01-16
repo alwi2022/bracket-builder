@@ -181,6 +181,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMatch(id: number, updates: Partial<InsertMatch>): Promise<Match> {
+    if (updates.team1Id === 0) {
+      updates.team1Id = null;
+    }
+
+    if (updates.team2Id === 0) {
+      updates.team2Id = null;
+    }
+
     const [updated] = await db
       .update(matches)
       .set(
