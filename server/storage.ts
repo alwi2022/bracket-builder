@@ -189,6 +189,11 @@ export class DatabaseStorage implements IStorage {
               ...updates,
               status: "in_progress",
             }
+          : !updates.team1Id && !updates.team2Id
+          ? {
+              ...updates,
+              status: "tbd",
+            }
           : updates
       )
       .where(eq(matches.id, id))

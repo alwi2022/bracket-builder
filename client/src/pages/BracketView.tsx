@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
-import { useTournament, useTournamentMatches, useUpdateMatch, useTeams } from "@/hooks/use-tournament";
+import {
+  useTournament,
+  useTournamentMatches,
+  useUpdateMatch,
+  useTeams,
+} from "@/hooks/use-tournament";
 import { Loader2, Trophy, Plus, Save } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { TeamCard } from "@/components/TeamCard";
 import type { MatchWithTeams, TeamWithPlayers } from "@shared/schema";
 import { clsx } from "clsx";
@@ -32,35 +43,46 @@ export default function BracketView() {
   }, {} as Record<number, MatchWithTeams[]>);
 
   // Sort matches within rounds by order
-  Object.keys(rounds).forEach(key => {
+  Object.keys(rounds).forEach((key) => {
     rounds[Number(key)].sort((a, b) => a.matchOrder - b.matchOrder);
   });
 
-  const roundNumbers = Object.keys(rounds).map(Number).sort((a, b) => a - b);
+  const roundNumbers = Object.keys(rounds)
+    .map(Number)
+    .sort((a, b) => a - b);
   const maxRound = Math.max(...roundNumbers);
 
   return (
     <div className="min-h-screen bg-muted/20 pb-20 overflow-x-auto">
       <div className="max-w-[1800px] mx-auto px-4 py-8">
         <div className="mb-8">
-          <span className="text-sm font-semibold text-primary uppercase tracking-widest">Tournament Bracket</span>
-          <h1 className="text-3xl md:text-4xl font-display font-bold mt-1">{tournament.name}</h1>
+          <span className="text-sm font-semibold text-primary uppercase tracking-widest">
+            Tournament Bracket
+          </span>
+          <h1 className="text-3xl md:text-4xl font-display font-bold mt-1">
+            {tournament.name}
+          </h1>
         </div>
 
         <div className="flex gap-16 min-w-max pb-8">
           {roundNumbers.map((round) => (
-            <div key={round} className="flex flex-col justify-around gap-8 w-80">
+            <div
+              key={round}
+              className="flex flex-col justify-around gap-8 w-80"
+            >
               <div className="text-center font-bold text-muted-foreground uppercase tracking-widest text-sm mb-4">
-                {round === maxRound ? "Finals" : 
-                 round === maxRound - 1 ? "Semi-Finals" : 
-                 `Round ${round}`}
+                {round === maxRound
+                  ? "Finals"
+                  : round === maxRound - 1
+                  ? "Semi-Finals"
+                  : `Round ${round}`}
               </div>
-              
+
               <div className="flex flex-col justify-around grow gap-8">
                 {rounds[round].map((match) => (
-                  <MatchNode 
-                    key={match.id} 
-                    match={match} 
+                  <MatchNode
+                    key={match.id}
+                    match={match}
                     isLeaf={round === 1}
                     availableTeams={allTeams || []}
                     matches={matches} // Pass all matches to filter used teams
@@ -69,10 +91,12 @@ export default function BracketView() {
               </div>
             </div>
           ))}
-          
+
           {/* Winner Column */}
           <div className="flex flex-col justify-center w-64">
-            <div className="text-center font-bold text-primary uppercase tracking-widest text-sm mb-4">Champion</div>
+            <div className="text-center font-bold text-primary uppercase tracking-widest text-sm mb-4">
+              Champion
+            </div>
             <div className="border-2 border-primary/20 bg-primary/5 rounded-2xl p-6 text-center h-48 flex flex-col items-center justify-center">
               <Trophy className="w-12 h-12 text-primary mb-3" />
               {(() => {
@@ -94,14 +118,14 @@ export default function BracketView() {
   );
 }
 
-function MatchNode({ 
-  match, 
-  isLeaf, 
+function MatchNode({
+  match,
+  isLeaf,
   availableTeams,
-  matches 
-}: { 
-  match: MatchWithTeams; 
-  isLeaf: boolean; 
+  matches,
+}: {
+  match: MatchWithTeams;
+  isLeaf: boolean;
   availableTeams: TeamWithPlayers[];
   matches: MatchWithTeams[];
 }) {
@@ -112,19 +136,21 @@ function MatchNode({
 
   // Filter out teams already assigned to any match in the tournament
   const usedTeamIds = new Set<number>();
-  matches.forEach(m => {
+  matches.forEach((m) => {
     if (m.team1Id) usedTeamIds.add(m.team1Id);
     if (m.team2Id) usedTeamIds.add(m.team2Id);
   });
 
-  const availableForSelection = availableTeams.filter(t => !usedTeamIds.has(t.id));
+  const availableForSelection = availableTeams.filter(
+    (t) => !usedTeamIds.has(t.id)
+  );
 
-  const handleTeamSelect = (teamId: number, position: 'team1' | 'team2') => {
+  const handleTeamSelect = (teamId: number, position: "team1" | "team2") => {
     updateMatch.mutate({
       id: match.id,
       updates: {
-        [position === 'team1' ? 'team1Id' : 'team2Id']: teamId
-      }
+        [position === "team1" ? "team1Id" : "team2Id"]: teamId,
+      },
     });
   };
 
@@ -134,15 +160,15 @@ function MatchNode({
       updates: {
         score1: parseInt(score1),
         score2: parseInt(score2),
-        advanceWinner: true // Custom flag for backend logic
-      }
+        advanceWinner: true, // Custom flag for backend logic
+      },
     });
   };
 
   const isCompleted = !!match.winnerId;
 
   return (
-    <div 
+    <div
       className={clsx(
         "relative bg-card rounded-xl border-2 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-lg",
         isCompleted ? "border-primary/50 shadow-primary/5" : "border-border",
@@ -153,27 +179,27 @@ function MatchNode({
     >
       <div className="flex flex-col divide-y divide-border">
         {/* Team 1 Slot */}
-        <TeamSlot 
-          team={match.team1} 
+        <TeamSlot
+          team={match.team1}
           score={score1}
           setScore={setScore1}
           isWinner={match.winnerId === match.team1Id}
           placeholder="Team 1"
           canSelect={isLeaf && !match.team1Id}
-          onSelect={(tid) => handleTeamSelect(tid, 'team1')}
+          onSelect={(tid) => handleTeamSelect(tid, "team1")}
           availableTeams={availableForSelection}
           readOnly={isCompleted}
         />
 
         {/* Team 2 Slot */}
-        <TeamSlot 
-          team={match.team2} 
+        <TeamSlot
+          team={match.team2}
           score={score2}
           setScore={setScore2}
           isWinner={match.winnerId === match.team2Id}
           placeholder="Team 2"
           canSelect={isLeaf && !match.team2Id}
-          onSelect={(tid) => handleTeamSelect(tid, 'team2')}
+          onSelect={(tid) => handleTeamSelect(tid, "team2")}
           availableTeams={availableForSelection}
           readOnly={isCompleted}
         />
@@ -200,16 +226,16 @@ function MatchNode({
   );
 }
 
-function TeamSlot({ 
-  team, 
-  score, 
-  setScore, 
-  isWinner, 
-  placeholder, 
-  canSelect, 
+function TeamSlot({
+  team,
+  score,
+  setScore,
+  isWinner,
+  placeholder,
+  canSelect,
   onSelect,
   availableTeams,
-  readOnly 
+  readOnly,
 }: {
   team?: any;
   score: string;
@@ -224,20 +250,26 @@ function TeamSlot({
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <div className={clsx(
-      "p-3 flex items-center justify-between gap-3 h-14",
-      isWinner && "bg-primary/5"
-    )}>
+    <div
+      className={clsx(
+        "p-3 flex items-center justify-between gap-3 h-14",
+        isWinner && "bg-primary/5"
+      )}
+    >
       {team ? (
         <div className="flex items-center gap-2 min-w-0">
-          <div className={clsx(
-            "w-2 h-2 rounded-full shrink-0",
-            isWinner ? "bg-primary" : "bg-muted-foreground/30"
-          )} />
-          <span className={clsx(
-            "font-semibold truncate text-sm",
-            isWinner ? "text-primary" : "text-foreground"
-          )}>
+          <div
+            className={clsx(
+              "w-2 h-2 rounded-full shrink-0",
+              isWinner ? "bg-primary" : "bg-muted-foreground/30"
+            )}
+          />
+          <span
+            className={clsx(
+              "font-semibold truncate text-sm",
+              isWinner ? "text-primary" : "text-foreground"
+            )}
+          >
             {team.name}
           </span>
         </div>
@@ -254,12 +286,17 @@ function TeamSlot({
             </DialogHeader>
             <div className="grid gap-2 max-h-[60vh] overflow-y-auto pt-2">
               {availableTeams.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No available teams. Go create more!</p>
+                <p className="text-muted-foreground text-center py-4">
+                  No available teams. Go create more!
+                </p>
               ) : (
-                availableTeams.map(t => (
-                  <div 
-                    key={t.id} 
-                    onClick={() => { onSelect(t.id); setDialogOpen(false); }}
+                availableTeams.map((t) => (
+                  <div
+                    key={t.id}
+                    onClick={() => {
+                      onSelect(t.id);
+                      setDialogOpen(false);
+                    }}
                     className="p-3 border rounded-lg hover:bg-muted cursor-pointer transition-colors"
                   >
                     <div className="font-bold">{t.name}</div>
@@ -273,11 +310,13 @@ function TeamSlot({
           </DialogContent>
         </Dialog>
       ) : (
-        <span className="text-sm text-muted-foreground/50 italic px-2">TBD</span>
+        <span className="text-sm text-muted-foreground/50 italic px-2">
+          TBD
+        </span>
       )}
 
       {team && (
-        <input 
+        <input
           type="number"
           value={score}
           onChange={(e) => setScore(e.target.value)}
