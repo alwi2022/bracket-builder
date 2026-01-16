@@ -215,6 +215,23 @@ export function useCreateTournament() {
   });
 }
 
+export function useDeleteTournament() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(buildUrl(api.tournaments.delete.path, { id }), {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete tournament");
+      return api.tournaments.delete.responses[200].parse(await res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.tournaments.list.path] });
+    },
+  });
+}
+
 // === MATCHES ===
 export function useTournamentMatches(tournamentId: number) {
   return useQuery({

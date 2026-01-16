@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Trophy, Plus, ArrowRight, Calendar } from "lucide-react";
-import { useTournaments, useCreateTournament } from "@/hooks/use-tournament";
+import { Trophy, Plus, ArrowRight, Calendar, X } from "lucide-react";
+import {
+  useTournaments,
+  useCreateTournament,
+  useDeleteTournament,
+} from "@/hooks/use-tournament";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -14,6 +18,7 @@ import {
 export default function TournamentList() {
   const { data: tournaments, isLoading } = useTournaments();
   const createTournament = useCreateTournament();
+  const deleteTournament = useDeleteTournament();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", teamCount: "4" });
@@ -34,6 +39,24 @@ export default function TournamentList() {
         description: "Failed to create tournament",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDelete = async (id: number, name: string) => {
+    const response = window.confirm(
+      `Are you sure you want to delete tournament ${name}?`
+    );
+    if (response) {
+      try {
+        await deleteTournament.mutateAsync(id);
+        toast({ title: "Success", description: "Tournament deleted!" });
+      } catch (e) {
+        toast({
+          title: "Error",
+          description: "Failed to delete tournament",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -128,15 +151,25 @@ export default function TournamentList() {
                   <div className="bg-primary/10 p-3 rounded-xl group-hover:scale-110 transition-transform">
                     <Trophy className="w-6 h-6 text-primary" />
                   </div>
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide ${
-                      tournament.status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {tournament.status.replace("_", " ")}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wide ${
+                        tournament.status === "completed"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {tournament.status.replace("_", " ")}
+                    </span>
+                    <X
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDelete(tournament.id, tournament.name);
+                      }}
+                      className="w-4 h-4 text-muted-foreground hover:text-foreground group-hover:text-primary transition-colors"
+                    />
+                  </div>
                 </div>
 
                 <h3 className="text-xl font-bold font-display mb-2 group-hover:text-primary transition-colors">

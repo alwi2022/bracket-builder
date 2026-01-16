@@ -139,6 +139,23 @@ export async function registerRoutes(
     }
   });
 
+  app.delete(api.tournaments.delete.path, async (req, res) => {
+    try {
+      const tournamentId = parseInt(req.params.id, 10);
+
+      // delete matches with tournament id this
+      await storage.deleteMatchesByTournamentId(tournamentId);
+
+      const tournament = await storage.deleteTournament(tournamentId);
+      res.status(200).json(tournament);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
   app.get(api.tournaments.get.path, async (req, res) => {
     const tournament = await storage.getTournament(Number(req.params.id));
     if (!tournament)

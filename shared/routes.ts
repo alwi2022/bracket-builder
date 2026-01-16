@@ -117,6 +117,14 @@ export const api = {
         ),
       },
     },
+    delete: {
+      method: "DELETE" as const,
+      path: "/api/tournaments/:id",
+      responses: {
+        200: z.object({ tournamentId: z.number() }),
+        404: errorSchemas.notFound,
+      },
+    },
   },
   matches: {
     update: {

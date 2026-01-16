@@ -170,6 +170,13 @@ export class DatabaseStorage implements IStorage {
     }));
   }
 
+  async deleteTournament(
+    tournamentId: number
+  ): Promise<{ tournamentId: number }> {
+    await db.delete(tournaments).where(eq(tournaments.id, tournamentId));
+    return { tournamentId };
+  }
+
   async createMatch(match: InsertMatch): Promise<Match> {
     const [newMatch] = await db.insert(matches).values(match).returning();
     return newMatch;
@@ -207,6 +214,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(matches.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteMatchesByTournamentId(tournamentId: number): Promise<void> {
+    await db.delete(matches).where(eq(matches.tournamentId, tournamentId));
   }
 }
 

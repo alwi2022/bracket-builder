@@ -12,7 +12,7 @@ export default function TournamentListView() {
         <div>
           <h1 className="text-3xl font-display font-bold">Tournaments</h1>
           <p className="text-muted-foreground mt-1">
-            Manage active brackets and history
+            View active brackets and history
           </p>
         </div>
       </div>
@@ -37,7 +37,10 @@ export default function TournamentListView() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tournaments?.map((tournament) => (
-            <Link key={tournament.id} href={`/tournaments/view/${tournament.id}`}>
+            <Link
+              key={tournament.id}
+              href={`/tournaments/view/${tournament.id}`}
+            >
               <div className="group bg-card border border-border hover:border-primary/50 rounded-2xl p-6 transition-all hover:shadow-xl hover:shadow-primary/5 cursor-pointer h-full flex flex-col">
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-primary/10 p-3 rounded-xl group-hover:scale-110 transition-transform">
