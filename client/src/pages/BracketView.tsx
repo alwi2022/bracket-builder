@@ -198,7 +198,9 @@ function MatchNode({
           onSelect={(tid) => handleTeamSelect(tid, "team1")}
           availableTeams={availableForSelection}
           readOnly={isCompleted}
-          onDelete={handleRemoveTeam}
+          onDelete={
+            isCompleted ? undefined : !isLeaf ? undefined : handleRemoveTeam
+          }
         />
 
         {/* Team 2 Slot */}
@@ -212,7 +214,9 @@ function MatchNode({
           onSelect={(tid) => handleTeamSelect(tid, "team2")}
           availableTeams={availableForSelection}
           readOnly={isCompleted}
-          onDelete={handleRemoveTeam}
+          onDelete={
+            isCompleted ? undefined : !isLeaf ? undefined : handleRemoveTeam
+          }
         />
       </div>
 
@@ -298,14 +302,16 @@ function TeamSlot({
           >
             {team.name}
           </span>
-          <X
-            onClick={() => {
-              if (onDelete) {
-                onDelete(team.id);
-              }
-            }}
-            className="w-3 h-3 text-muted-foreground"
-          />
+          {onDelete && (
+            <X
+              onClick={() => {
+                if (onDelete) {
+                  onDelete(team.id);
+                }
+              }}
+              className="w-3 h-3 text-muted-foreground"
+            />
+          )}
         </div>
       ) : canSelect ? (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
