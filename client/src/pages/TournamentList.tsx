@@ -107,7 +107,6 @@ export default function TournamentList() {
                   <option value="8">8 Teams</option>
                   <option value="16">16 Teams</option>
                   <option value="32">32 Teams</option>
-                  <option value="24">24 Teams</option>
                 </select>
                 <p className="text-xs text-muted-foreground">
                   This determines the size of the bracket tree.
