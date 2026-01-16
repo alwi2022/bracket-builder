@@ -14,21 +14,21 @@ export function Navbar() {
               <Trophy className="h-6 w-6 text-primary" />
             </div>
             <span className="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-              TourneyPro
+              DRX Padel Web App
             </span>
           </Link>
 
           <div className="flex space-x-1 sm:space-x-4">
-            <NavLink 
-              href="/" 
-              active={location === "/"} 
+            <NavLink
+              href="/"
+              active={location === "/"}
               icon={<Users className="w-4 h-4 mr-2" />}
             >
               Teams & Players
             </NavLink>
-            <NavLink 
-              href="/tournaments" 
-              active={location.startsWith("/tournaments")} 
+            <NavLink
+              href="/tournaments"
+              active={location.startsWith("/tournaments")}
               icon={<GitMerge className="w-4 h-4 mr-2" />}
             >
               Tournaments
@@ -40,14 +40,24 @@ export function Navbar() {
   );
 }
 
-function NavLink({ href, children, active, icon }: { href: string; children: React.ReactNode; active: boolean; icon: React.ReactNode }) {
+function NavLink({
+  href,
+  children,
+  active,
+  icon,
+}: {
+  href: string;
+  children: React.ReactNode;
+  active: boolean;
+  icon: React.ReactNode;
+}) {
   return (
-    <Link 
-      href={href} 
+    <Link
+      href={href}
       className={clsx(
         "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-        active 
-          ? "bg-primary text-primary-foreground shadow-md shadow-primary/25" 
+        active
+          ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
           : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
       )}
     >
